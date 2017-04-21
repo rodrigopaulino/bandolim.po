@@ -1,0 +1,22 @@
+{
+  "name": "bandolim.po",
+  "version": "1.0.0",
+  "description": "Liferay Portal's Test Environment Builder",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com/rodrigopaulino/bandolim.po.git"
+  },
+  "author": "Rodrigo Paulino",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rodrigopaulino/bandolim.po/issues"
+  },
+  "homepage": "https://github.com/rodrigopaulino/bandolim.po#readme",
+  "dependencies": {
+    "vorpal": "^1.12.0"
+  }
+}
