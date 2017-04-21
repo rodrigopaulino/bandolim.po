@@ -18,5 +18,8 @@
   "homepage": "https://github.com/rodrigopaulino/bandolim.po#readme",
   "dependencies": {
     "vorpal": "^1.12.0"
+  },
+  "bin": {
+    "po": "./index.js"
   }
 }
