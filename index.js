@@ -3,58 +3,43 @@
 const vorpal = require('vorpal')();
 const request = require('request');
 const fs = require('fs');
+const cmd = vorpal.activeCommand;
+const prefixURL = "http://nikita/private/ee/fix-packs/6.2.10";
 
 vorpal
-  .command("comando <obrigatorio> [opcional]", "este comando só faz printar os argumentos")
-  .option("--opcao, -o", "uma opcao")
-  .option("--opcao2, -p", "segunda opção")
+  .command("fixpack <level>")
   .action(
     (args, callback) => {
-      console.log(args);
-      callback();
+      const url =
+        `${prefixURL}/portal/liferay-fix-pack-portal-${args.level}-6210.zip`;
+      request(url, (error, response, body) => {
+        fs.writeFile(
+          `liferay-hotfix-${args.level}-6210.zip`,
+          body,
+          (err, written, buffer) => {
+            cmd.log("Fix-Pack Downloaded!");
+            callback();
+          });
+      });
     }
-  );
+  )
 
-  vorpal
-    .command("<referencia>")
-    .option("--hotfix, -h", "Use se for baixar hotfix")
-    .option("--fixpack, -f", "Use se for baixa fixpack")
-    .action(
-      (args, callback) => {
-        if (args.options.hotfix) {
-          vorpal.activeCommand.log("escolheu hotfix");
-          const url =
-            `http://192.168.110.251/private/ee/fix-packs/6.2.10/hotfix/liferay-hotfix-${args.referencia}-6210.zip`;
-          const cmd = vorpal.activeCommand;
-          cmd.log(url);
-          request(url, (error, response, body) => {
-            fs.writeFile(
-              `liferay-hotfix-${args.referencia}-6210.zip`,
-              body,
-              (err, written, buffer) => {
-                cmd.log("terminei!");
-                callback();
-              });
+vorpal
+  .command("hotfix <level>")
+  .action(
+    (args, callback) => {
+      const url =
+        `${prefixURL}/hotfix/liferay-hotfix-${args.level}-6210.zip`;
+      request(url, (error, response, body) => {
+        fs.writeFile(
+          `liferay-hotfix-${args.referencia}-6210.zip`,
+          body,
+          (err, written, buffer) => {
+            cmd.log("Hotfix Downloaded!");
+            callback();
           });
-          //hotfix
-        }
-        else if (args.options.fixpack) {
-          vorpal.activeCommand.log("escolheu fixpack");
-          const url =
-            `http://192.168.110.251/private/ee/fix-packs/6.2.10/portal/liferay-fix-pack-portal-${args.referencia}-6210.zip`;
-          vorpal.activeCommand.log(url);
-          request(url, (error, response, body) => {
-            fs.writeFile(
-              `liferay-hotfix-${args.referencia}-6210.zip`,
-              body,
-              (err, written, buffer) => {
-                callback();
-              });
-          });
-        }
-      }
-    )
+      });
+    }
+  )
 
 vorpal.delimiter("$").show().parse(process.argv);
-
-// console.log("Hello, world!");
