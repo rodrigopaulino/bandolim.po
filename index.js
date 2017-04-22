@@ -6,7 +6,7 @@ const fs = require("fs");
 const shell = require("shelljs");
 const patchingToolPath = "./patching-tool";
 const patchesPath = `${patchingToolPath}/patches`;
-const prefixURL = "https://nikita/private/ee/fix-packs/6.2.10";
+const prefixURL = "http://nikita/private/ee/fix-packs/6.2.10";
 
 function revertAndClear() {
   shell.exec(`${patchingToolPath}/patching-tool.sh revert`);
