@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/rodrigopaulino/bandolim.po#readme",
   "dependencies": {
+    "del": "^2.2.2",
     "request": "^2.81.0",
     "shelljs": "^0.7.7",
     "vorpal": "^1.12.0"
