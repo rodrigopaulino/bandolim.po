@@ -1,6 +1,6 @@
 {
   "name": "bandolim.po",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Liferay Portal's Test Environment Builder",
   "main": "index.js",
   "scripts": {
@@ -20,6 +20,7 @@
     "colors": "^1.1.2",
     "inquirer": "^3.0.6",
     "jira": "^0.9.2",
+    "promise": "^7.1.1",
     "vorpal": "^1.12.0"
   },
   "bin": {
