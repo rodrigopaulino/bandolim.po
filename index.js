@@ -1,73 +1,20 @@
 #!/usr/bin/env node
 
-// const request = require("request");
-// const fs = require("fs");
-// const shell = require("shelljs");
-// const del = require("del");
-// const patchingToolPath = "./patching-tool";
-// const patchesPath = `${patchingToolPath}/patches`;
-// const prefixURL = "http://nikita/private/ee/fix-packs/6.2.10";
-
-// function downloadAndInstall(url, destFile) {
-// 	var statusCode;
-// 	request
-// 		.get(url)
-// 		.on("response", function(response) {
-// 			statusCode = response.statusCode;
-// 			if (statusCode == 200) {
-// 				log("Downloading patch...");
-// 			}
-// 			else if (statusCode == 404) {
-// 				log("Patch not found!");
-// 			}
-// 			else {
-// 				log(`Resquest status: ${response.statusCode}`);
-// 			}
-// 		})
-// 		.pipe(
-// 			fs.createWriteStream(destFile)
-// 		).on("finish", function () {
-// 			if (statusCode == 200) {
-// 				del([`${patchesPath}/*`, `!${destFile}`])
-// 				.then(paths => {
-// 					shell.exec(
-// 						`${patchingToolPath}/patching-tool.sh install -force`);
-// 				});
-// 			}
-// 			else {
-// 				del(destFile);
-// 			}
-// 		});
-// }
-
-// vorpal
-// 	.command("fixpack <level>")
-// 	.action(
-// 		(args, callback) => {
-// 			var fileName = `liferay-fix-pack-portal-${args.level}-6210.zip`;
-// 			var url = `${prefixURL}/portal/${fileName}`;
-// 			var destFile = `${patchesPath}/${fileName}`;
-//
-// 			downloadAndInstall(url, destFile);
-// 		}
-// 	);
-//
-// vorpal
-// 	.command("hotfix <level>")
-// 	.action(
-// 		(args, callback) => {
-// 			var fileName = `liferay-hotfix-${args.level}-6210.zip`;
-// 			var url = `${prefixURL}/hotfix/${fileName}`;
-// 			var destFile = `${patchesPath}/${fileName}`;
-//
-// 			downloadAndInstall(url, destFile);
-// 		}
-// 	);
+const request = require("request");
+const fs = require("fs");
+const shell = require("shelljs");
+const del = require("del");
+const patchingToolPath = "./patching-tool";
+const patchesPath = `${patchingToolPath}/patches`;
+const prefixFPURL = "http://nikita/private/ee/fix-packs";
+const prefixURL6210 = `${prefixFPURL}/6.2.10`;
+const prefixURL7010 = `${prefixFPURL}/7.0.10`;
 const vorpal = require("vorpal")();
 const colors = require("colors");
 const inquirer = require("inquirer");
 const JiraApi = require("jira").JiraApi;
 const Promise = require("promise");
+const pathExists = require('path-exists');
 const questions = [
 	{
 		type: "input",
@@ -96,6 +43,38 @@ const options = {
 
 var tuple = "";
 var filter = "";
+
+function downloadAndInstall(url, destFile) {
+	var statusCode;
+	request
+		.get(url)
+		.on("response", function(response) {
+			statusCode = response.statusCode;
+			if (statusCode == 200) {
+				log("Downloading patch...");
+			}
+			else if (statusCode == 404) {
+				log("Patch not found!");
+			}
+			else {
+				log(`Resquest status: ${response.statusCode}`);
+			}
+		})
+		.pipe(
+			fs.createWriteStream(destFile)
+		).on("finish", function () {
+			if (statusCode == 200) {
+				del([`${patchesPath}/*`, `!${destFile}`])
+				.then(paths => {
+					shell.exec(
+						`${patchingToolPath}/patching-tool.sh install -force`);
+				});
+			}
+			else {
+				del(destFile);
+			}
+		});
+}
 
 function log(message) {
 	vorpal.activeCommand.log(message);
@@ -159,6 +138,54 @@ function getIssues(
 				});
 		});
 }
+
+vorpal
+	.command("fixpack <level>")
+	.action(
+		(args, callback) => {
+			var fileName;
+			var url;
+			var destFile;
+
+			pathExists('./osgi').then(exists => {
+				if (exists) {
+					var fileName = `liferay-fix-pack-de-${args.level}-7010.zip`;
+					var url = `${prefixURL7010}/de/${fileName}`;
+					var destFile = `${patchesPath}/${fileName}`;
+				} else {
+					var fileName = `liferay-fix-pack-portal-${args.level}-6210.zip`;
+					var url = `${prefixURL6210}/portal/${fileName}`;
+					var destFile = `${patchesPath}/${fileName}`;
+				}
+
+				downloadAndInstall(url, destFile);
+			});
+		}
+	);
+
+vorpal
+	.command("hotfix <level>")
+	.action(
+		(args, callback) => {
+			var fileName;
+			var url;
+			var destFile;
+
+			pathExists('./osgi').then(exists => {
+				if (exists) {
+					var fileName = `liferay-hotfix-${args.level}-7010.zip`;
+					var url = `${prefixURL7010}/hotfix/${fileName}`;
+					var destFile = `${patchesPath}/${fileName}`;
+				} else {
+					var fileName = `liferay-hotfix-${args.level}-6210.zip`;
+					var url = `${prefixURL6210}/hotfix/${fileName}`;
+					var destFile = `${patchesPath}/${fileName}`;
+				}
+
+				downloadAndInstall(url, destFile);
+			});
+		}
+	);
 
 vorpal
 	.command("diff <fixpack1> <fixpack2> <version>")
