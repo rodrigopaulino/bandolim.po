@@ -145,18 +145,16 @@ vorpal
 		(args, callback) => {
 			var fileName;
 			var url;
-			var destFile;
 
 			pathExists('./osgi').then(exists => {
 				if (exists) {
-					var fileName = `liferay-fix-pack-de-${args.level}-7010.zip`;
-					var url = `${prefixURL7010}/de/${fileName}`;
-					var destFile = `${patchesPath}/${fileName}`;
+					fileName = `liferay-fix-pack-de-${args.level}-7010.zip`;
+					url = `${prefixURL7010}/de/${fileName}`;
 				} else {
-					var fileName = `liferay-fix-pack-portal-${args.level}-6210.zip`;
-					var url = `${prefixURL6210}/portal/${fileName}`;
-					var destFile = `${patchesPath}/${fileName}`;
+					fileName = `liferay-fix-pack-portal-${args.level}-6210.zip`;
+					url = `${prefixURL6210}/portal/${fileName}`;
 				}
+				var destFile = `${patchesPath}/${fileName}`;
 
 				downloadAndInstall(url, destFile);
 			});
@@ -169,18 +167,16 @@ vorpal
 		(args, callback) => {
 			var fileName;
 			var url;
-			var destFile;
 
 			pathExists('./osgi').then(exists => {
 				if (exists) {
-					var fileName = `liferay-hotfix-${args.level}-7010.zip`;
-					var url = `${prefixURL7010}/hotfix/${fileName}`;
-					var destFile = `${patchesPath}/${fileName}`;
+					fileName = `liferay-hotfix-${args.level}-7010.zip`;
+					url = `${prefixURL7010}/hotfix/${fileName}`;
 				} else {
-					var fileName = `liferay-hotfix-${args.level}-6210.zip`;
-					var url = `${prefixURL6210}/hotfix/${fileName}`;
-					var destFile = `${patchesPath}/${fileName}`;
+					fileName = `liferay-hotfix-${args.level}-6210.zip`;
+					url = `${prefixURL6210}/hotfix/${fileName}`;
 				}
+				var destFile = `${patchesPath}/${fileName}`;
 
 				downloadAndInstall(url, destFile);
 			});
