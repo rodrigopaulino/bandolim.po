@@ -140,6 +140,28 @@ function getIssues(
 }
 
 vorpal
+	.command("last")
+	.action(
+		(args, callback) => {
+			var fileName;
+			var url;
+
+			pathExists('./osgi').then(exists => {
+				if (exists) {
+					fileName = `liferay-fix-pack-de-${args.level}-7010.zip`;
+					url = `${prefixURL7010}/de/${fileName}`;
+				} else {
+					fileName = `liferay-fix-pack-portal-${args.level}-6210.zip`;
+					url = `${prefixURL6210}/portal/${fileName}`;
+				}
+				//var destFile = `${patchesPath}/${fileName}`;
+
+				//downloadAndInstall(url, destFile);
+			});
+		}
+	);
+
+vorpal
 	.command("fixpack <level>")
 	.action(
 		(args, callback) => {
