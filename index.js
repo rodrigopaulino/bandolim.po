@@ -140,23 +140,48 @@ function getIssues(
 }
 
 vorpal
-	.command("last")
+	.command("license")
+	.action(
+		(args, callback) => {
+
+		}
+	);
+
+vorpal
+	.command("latest")
 	.action(
 		(args, callback) => {
 			var fileName;
 			var url;
+			var fixpackDirURL;
+			var latestURL;
+			var destFile;
 
 			pathExists('./osgi').then(exists => {
 				if (exists) {
-					fileName = `liferay-fix-pack-de-${args.level}-7010.zip`;
-					url = `${prefixURL7010}/de/${fileName}`;
-				} else {
-					fileName = `liferay-fix-pack-portal-${args.level}-6210.zip`;
-					url = `${prefixURL6210}/portal/${fileName}`;
-				}
-				//var destFile = `${patchesPath}/${fileName}`;
+					fixpackDirURL = `${prefixURL7010}/de`
+					request(`${fixpackDirURL}/LATEST.txt`,
+						function (error, response, body) {
 
-				//downloadAndInstall(url, destFile);
+						fileName = `liferay-fix-pack-de-${body}-7010.zip`;
+						url = `${fixpackDirURL}/${fileName}`;
+						destFile = `${patchesPath}/${fileName}`;
+
+						downloadAndInstall(url, destFile);
+					});
+				} else {
+					fixpackDirURL = `${prefixURL6210}/portal`
+					request(`${fixpackDirURL}/LATEST.txt`,
+						function (error, response, body) {
+
+						fileName = `liferay-fix-pack-portal-${body}-6210.zip`;
+						url = `${fixpackDirURL}/${fileName}`;
+						destFile = `${patchesPath}/${fileName}`;
+
+						downloadAndInstall(url, destFile);
+					});
+				}
+
 			});
 		}
 	);

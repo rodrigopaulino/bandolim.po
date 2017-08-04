@@ -1,6 +1,6 @@
 {
   "name": "bandolim.po",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Liferay Portal's Test Environment Builder",
   "main": "index.js",
   "scripts": {
