@@ -4,17 +4,20 @@ const request = require("request");
 const fs = require("fs");
 const shell = require("shelljs");
 const del = require("del");
-const patchingToolPath = "./patching-tool";
-const patchesPath = `${patchingToolPath}/patches`;
-const prefixFPURL = "http://nikita/private/ee/fix-packs";
-const prefixURL6210 = `${prefixFPURL}/6.2.10`;
-const prefixURL7010 = `${prefixFPURL}/7.0.10`;
 const vorpal = require("vorpal")();
 const colors = require("colors");
 const inquirer = require("inquirer");
 const JiraApi = require("jira").JiraApi;
 const Promise = require("promise");
 const pathExists = require('path-exists');
+
+const patchingToolPath = "./patching-tool";
+const patchesPath = `${patchingToolPath}/patches`;
+const prefixFPURL = "http://nikita/private/ee/fix-packs";
+const prefixURL6210 = `${prefixFPURL}/6.2.10`;
+const prefixURL7010 = `${prefixFPURL}/7.0.10`;
+const prefixURL7110 = `${prefixFPURL}/7.1.10`;
+
 const questions = [
 	{
 		type: "input",
@@ -87,7 +90,7 @@ function getIssues(
 	var tuple = "";
 	var comma = "";
 
-	if (version == "7.0") {
+	if (version == "7.0" || version == "7.1") {
 		filter = "AND ((project = LPS AND level = null) OR project = LPE)";
 	} else {
 		filter = "AND project = LPE";
@@ -96,9 +99,13 @@ function getIssues(
 	filter += (component) ? ` AND component = ${component}` : "";
 
 	while (newer > older) {
-		if (version == "7.0") {
+		if (version == "7.1") {
+			label = `liferay-fixpack-dxp-${newer}-7110`;
+		}
+		else if (version == "7.0") {
 			label = `liferay-fixpack-de-${newer}-7010`;
-		} else {
+		}
+		else {
 			label = `liferay-fixpack-portal-${newer}-6210`;
 		}
 
@@ -157,31 +164,56 @@ vorpal
 			var latestURL;
 			var destFile;
 
-			pathExists('./osgi').then(exists => {
+			pathExists('./patching-tool').then(exists => {
 				if (exists) {
-					fixpackDirURL = `${prefixURL7010}/de`
-					request(`${fixpackDirURL}/LATEST.txt`,
-						function (error, response, body) {
+					var text = fs.readFileSync('readme.html','utf8');
 
-						fileName = `liferay-fix-pack-de-${body}-7010.zip`;
-						url = `${fixpackDirURL}/${fileName}`;
-						destFile = `${patchesPath}/${fileName}`;
+					if (text.includes('6\x2e2')) {
+						fixpackDirURL = `${prefixURL6210}/portal`
 
-						downloadAndInstall(url, destFile);
-					});
-				} else {
-					fixpackDirURL = `${prefixURL6210}/portal`
-					request(`${fixpackDirURL}/LATEST.txt`,
-						function (error, response, body) {
+						request(`${fixpackDirURL}/LATEST.txt`,
+							function (error, response, body) {
+								fileName = `liferay-fix-pack-portal-${body}-6210.zip`;
+								url = `${fixpackDirURL}/${fileName}`;
+								destFile = `${patchesPath}/${fileName}`;
 
-						fileName = `liferay-fix-pack-portal-${body}-6210.zip`;
-						url = `${fixpackDirURL}/${fileName}`;
-						destFile = `${patchesPath}/${fileName}`;
+								downloadAndInstall(url, destFile);
+							}
+						);
+					}
+					else if (text.includes('7\x2e0')) {
+						fixpackDirURL = `${prefixURL7010}/de`
 
-						downloadAndInstall(url, destFile);
-					});
+						request(`${fixpackDirURL}/LATEST.txt`,
+							function (error, response, body) {
+								fileName = `liferay-fix-pack-de-${body}-7010.zip`;
+								url = `${fixpackDirURL}/${fileName}`;
+								destFile = `${patchesPath}/${fileName}`;
+
+								downloadAndInstall(url, destFile);
+							}
+						);
+					}
+					else if (text.includes('7\x2e1')) {
+						fixpackDirURL = `${prefixURL7110}/dxp`
+
+						request(`${fixpackDirURL}/LATEST.txt`,
+							function (error, response, body) {
+								fileName = `liferay-fix-pack-dxp-${body}-7110.zip`;
+								url = `${fixpackDirURL}/${fileName}`;
+								destFile = `${patchesPath}/${fileName}`;
+
+								downloadAndInstall(url, destFile);
+							}
+						);
+					}
+					else {
+						log("Liferay version not identified.");
+					}
 				}
-
+				else {
+					log("Please install Patching Tool on this bundle.")
+				}
 			});
 		}
 	);
@@ -193,17 +225,41 @@ vorpal
 			var fileName;
 			var url;
 
-			pathExists('./osgi').then(exists => {
+			pathExists('./patching-tool').then(exists => {
 				if (exists) {
-					fileName = `liferay-fix-pack-de-${args.level}-7010.zip`;
-					url = `${prefixURL7010}/de/${fileName}`;
-				} else {
-					fileName = `liferay-fix-pack-portal-${args.level}-6210.zip`;
-					url = `${prefixURL6210}/portal/${fileName}`;
-				}
-				var destFile = `${patchesPath}/${fileName}`;
+					var text = fs.readFileSync('readme.html','utf8');
 
-				downloadAndInstall(url, destFile);
+					if (text.includes('6\x2e2')) {
+						fileName = `liferay-fix-pack-portal-${args.level}-6210.zip`;
+						url = `${prefixURL6210}/portal/${fileName}`;
+
+						var destFile = `${patchesPath}/${fileName}`;
+
+						downloadAndInstall(url, destFile);
+					}
+					else if (text.includes('7\x2e0')) {
+						fileName = `liferay-fix-pack-de-${args.level}-7010.zip`;
+						url = `${prefixURL7010}/de/${fileName}`;
+
+						var destFile = `${patchesPath}/${fileName}`;
+
+						downloadAndInstall(url, destFile);
+					}
+					else if (text.includes('7\x2e1')) {
+						fileName = `liferay-fix-pack-dxp-${args.level}-7110.zip`;
+						url = `${prefixURL7110}/dxp/${fileName}`;
+
+						var destFile = `${patchesPath}/${fileName}`;
+
+						downloadAndInstall(url, destFile);
+					}
+					else {
+						log("Liferay version not identified.");
+					}
+				}
+				else {
+					log("Please install Patching Tool on this bundle.");
+				}
 			});
 		}
 	);
@@ -215,17 +271,41 @@ vorpal
 			var fileName;
 			var url;
 
-			pathExists('./osgi').then(exists => {
+			pathExists('./patching-tool').then(exists => {
 				if (exists) {
-					fileName = `liferay-hotfix-${args.level}-7010.zip`;
-					url = `${prefixURL7010}/hotfix/${fileName}`;
-				} else {
-					fileName = `liferay-hotfix-${args.level}-6210.zip`;
-					url = `${prefixURL6210}/hotfix/${fileName}`;
-				}
-				var destFile = `${patchesPath}/${fileName}`;
+					var text = fs.readFileSync('readme.html','utf8');
 
-				downloadAndInstall(url, destFile);
+					if (text.includes('6\x2e2')) {
+						fileName = `liferay-hotfix-${args.level}-6210.zip`;
+						url = `${prefixURL6210}/hotfix/${fileName}`;
+
+						var destFile = `${patchesPath}/${fileName}`;
+
+						downloadAndInstall(url, destFile);
+					}
+					else if (text.includes('7\x2e0')) {
+						fileName = `liferay-hotfix-${args.level}-7010.zip`;
+						url = `${prefixURL7010}/hotfix/${fileName}`;
+
+						var destFile = `${patchesPath}/${fileName}`;
+
+						downloadAndInstall(url, destFile);
+					}
+					else if (text.includes('7\x2e1')) {
+						fileName = `liferay-hotfix-${args.level}-7110.zip`;
+						url = `${prefixURL7110}/hotfix/${fileName}`;
+
+						var destFile = `${patchesPath}/${fileName}`;
+
+						downloadAndInstall(url, destFile);
+					}
+					else {
+						log("Liferay version not identified.");
+					}
+				}
+				else {
+					log("Please install Patching Tool on this bundle.");
+				}
 			});
 		}
 	);
@@ -251,7 +331,7 @@ vorpal
 				return;
 			}
 
-			if (args.version != "7.0" && args.version != "6.2") {
+			if (args.version != "7.1" && args.version != "7.0" && args.version != "6.2") {
 				log(
 					"Not a valid Liferay Portal version nor supported by Bandolim.po");
 				return;
