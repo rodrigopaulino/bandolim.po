@@ -212,7 +212,7 @@ vorpal
 					}
 				}
 				else {
-					log("Please install Patching Tool on this bundle.")
+					log("No Patching Tool was detected.")
 				}
 			});
 		}
@@ -258,7 +258,7 @@ vorpal
 					}
 				}
 				else {
-					log("Please install Patching Tool on this bundle.");
+					log("No Patching Tool was detected.");
 				}
 			});
 		}
@@ -304,7 +304,7 @@ vorpal
 					}
 				}
 				else {
-					log("Please install Patching Tool on this bundle.");
+					log("No Patching Tool was detected.");
 				}
 			});
 		}
