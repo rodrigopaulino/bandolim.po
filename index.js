@@ -10,6 +10,9 @@ const inquirer = require("inquirer");
 const JiraApi = require("jira").JiraApi;
 const Promise = require("promise");
 const pathExists = require('path-exists');
+const bcrypt = require('bcrypt');
+
+const saltRounds = 12;
 
 const patchingToolPath = "./patching-tool";
 const patchesPath = `${patchingToolPath}/patches`;
@@ -22,16 +25,30 @@ const prefixURL7210 = `${prefixFPURL}/7.2.10`;
 const questions = [
 	{
 		type: "input",
-		message: colors.magenta("JIRA's username:"),
-		name: "username",
+		message: colors.magenta("Please enter your Liferay.com username:"),
+		name: "liferayUsername",
 		required: true
 	},
 	{
 		type: "password",
-		message: colors.magenta("JIRA's password:"),
-		name: "password"
+		message: colors.magenta("Please enter your Liferay.com password:"),
+		name: "liferayPassword",
+		required: true
+	},
+	{
+		type: "input",
+		message: colors.magenta("Please enter your JIRA username:"),
+		name: "jiraUsername",
+		required: true
+	},
+	{
+		type: "password",
+		message: colors.magenta("Please enter your JIRA password:"),
+		name: "jiraPassword",
+		required: true
 	}
 ];
+
 const result = {
 	total: null,
 	issues: []
@@ -156,6 +173,59 @@ vorpal
 		(args, callback) => {
 
 		}
+	);
+
+vorpal
+	.command("setup")
+	.action(
+		(args, callback) => {
+			pathExists('./credentials.properties')
+				.then(exists => {
+					if (exists) {
+						return inquirer.prompt([{
+							type: "input",
+							message: colors.magenta("You already have your credentials setup. Are you trying to reconfigure them (y/n):"),
+							name: "answer",
+							required: true
+						}]).then(function (answers) {
+							if (answers.answer === 'n' || answers.answer === 'N') {
+								return false;
+							}
+							else {
+								return true;
+							}
+						});
+					}
+					else {
+						return true;
+					}
+				})
+				.then(finalAnswer => {
+					if (finalAnswer) {
+						inquirer.prompt(questions)
+							.then(function (answers) {
+								bcrypt.hash(answers.liferayPassword, saltRounds)
+									.then(function(hash) {
+										return obj = {
+											liferayUsername: answers.liferayUsername,
+											liferayPassword: hash
+										}
+									})
+									.then(obj => {
+										return bcrypt.hash(answers.jiraPassword, saltRounds).then(hash => {
+											obj.jiraUsername = answers.jiraUsername;
+											obj.jiraPassword = hash;
+
+											return obj;
+										});
+									})
+									.then(obj => {
+										fs.writeFileSync('./credentials.properties', JSON.stringify(obj));
+									});
+							});
+					}
+				});
+			}
 	);
 
 vorpal
@@ -370,7 +440,7 @@ vorpal
 				return;
 			}
 
-			inquirer.prompt(questions).then(function (answers) {
+			inquirer.prompt(questionsJiraAuth).then(function (answers) {
 				getIssues(
 					newer, older, args.version, args.options.total,
 					args.options.component, answers.username, answers.password)
