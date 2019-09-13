@@ -17,6 +17,7 @@ const prefixFPURL = "http://nikita/private/ee/fix-packs";
 const prefixURL6210 = `${prefixFPURL}/6.2.10`;
 const prefixURL7010 = `${prefixFPURL}/7.0.10`;
 const prefixURL7110 = `${prefixFPURL}/7.1.10`;
+const prefixURL7210 = `${prefixFPURL}/7.2.10`;
 
 const questions = [
 	{
@@ -90,7 +91,7 @@ function getIssues(
 	var tuple = "";
 	var comma = "";
 
-	if (version == "7.0" || version == "7.1") {
+	if (version == "7.0" || version == "7.1" || version == "7.2") {
 		filter = "AND ((project = LPS AND level = null) OR project = LPE)";
 	} else {
 		filter = "AND project = LPE";
@@ -99,7 +100,10 @@ function getIssues(
 	filter += (component) ? ` AND component = ${component}` : "";
 
 	while (newer > older) {
-		if (version == "7.1") {
+		if (version == "7.2") {
+			label = `liferay-fixpack-dxp-${newer}-7210`;
+		}
+		else if (version == "7.1") {
 			label = `liferay-fixpack-dxp-${newer}-7110`;
 		}
 		else if (version == "7.0") {
@@ -207,6 +211,19 @@ vorpal
 							}
 						);
 					}
+					else if (text.includes('7\x2e2')) {
+						fixpackDirURL = `${prefixURL7210}/dxp`
+
+						request(`${fixpackDirURL}/LATEST.txt`,
+							function (error, response, body) {
+								fileName = `liferay-fix-pack-dxp-${body}-7210.zip`;
+								url = `${fixpackDirURL}/${fileName}`;
+								destFile = `${patchesPath}/${fileName}`;
+
+								downloadAndInstall(url, destFile);
+							}
+						);
+					}
 					else {
 						log("Liferay version not identified.");
 					}
@@ -248,6 +265,14 @@ vorpal
 					else if (text.includes('7\x2e1')) {
 						fileName = `liferay-fix-pack-dxp-${args.level}-7110.zip`;
 						url = `${prefixURL7110}/dxp/${fileName}`;
+
+						var destFile = `${patchesPath}/${fileName}`;
+
+						downloadAndInstall(url, destFile);
+					}
+					else if (text.includes('7\x2e2')) {
+						fileName = `liferay-fix-pack-dxp-${args.level}-7210.zip`;
+						url = `${prefixURL7210}/dxp/${fileName}`;
 
 						var destFile = `${patchesPath}/${fileName}`;
 
@@ -299,6 +324,14 @@ vorpal
 
 						downloadAndInstall(url, destFile);
 					}
+					else if (text.includes('7\x2e2')) {
+						fileName = `liferay-hotfix-${args.level}-7210.zip`;
+						url = `${prefixURL7210}/hotfix/${fileName}`;
+
+						var destFile = `${patchesPath}/${fileName}`;
+
+						downloadAndInstall(url, destFile);
+					}
 					else {
 						log("Liferay version not identified.");
 					}
@@ -331,7 +364,7 @@ vorpal
 				return;
 			}
 
-			if (args.version != "7.1" && args.version != "7.0" && args.version != "6.2") {
+			if (args.version != "7.2" && args.version != "7.1" && args.version != "7.0" && args.version != "6.2") {
 				log(
 					"Not a valid Liferay Portal version nor supported by Bandolim.po");
 				return;
